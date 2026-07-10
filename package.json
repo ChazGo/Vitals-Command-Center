@@ -4,7 +4,7 @@
   "private": true,
   "description": "Self-hosted, privacy-first health dashboard — unify Fitbit, Oura, WHOOP, Apple Health & Strava into one daily readiness read with a local AI brief.",
   "license": "MIT",
-  "homepage": "https://vitals.chuds.dev",
+  "homepage": "https://vitals.8tp.dev",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/8tp/Vitals-Command-Center.git"
