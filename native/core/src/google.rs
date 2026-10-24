@@ -17,7 +17,7 @@ fn client() -> Result<Client, String> {
         .timeout(Duration::from_secs(25))
         .connect_timeout(Duration::from_secs(10))
         .redirect(reqwest::redirect::Policy::none())
-        .user_agent("VitalsNative/0.1")
+        .user_agent("Health/0.1")
         .build()
         .map_err(|e| format!("Cannot initialize HTTPS: {e}"))
 }
@@ -343,6 +343,7 @@ mod tests {
                         Err(e) => panic!("fixture failed: {e}"),
                     }
                 };
+                stream.set_nonblocking(false).unwrap();
                 stream
                     .set_read_timeout(Some(Duration::from_secs(3)))
                     .unwrap();

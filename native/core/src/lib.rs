@@ -109,7 +109,7 @@ pub unsafe extern "C" fn vitals_call(request: *const c_char) -> *mut c_char {
         }
     })
     .unwrap_or_else(|_| {
-        json!({"ok":false,"error":"Unexpected native backend error. Restart Vitals."}).to_string()
+        json!({"ok":false,"error":"Unexpected native backend error. Restart Health."}).to_string()
     });
     CString::new(result)
         .expect("JSON escapes embedded NUL characters")

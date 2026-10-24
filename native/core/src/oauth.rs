@@ -73,9 +73,9 @@ pub fn authorize(client_id: &str) -> Result<Authorization, String> {
                 }
                 let result = callback_code(target, &state);
                 let message = if result.is_ok() {
-                    "Authorization received. Return to Vitals to finish connecting."
+                    "Authorization received. Return to Health to finish connecting."
                 } else {
-                    "Sign-in was rejected. Return to Vitals for details."
+                    "Sign-in was rejected. Return to Health for details."
                 };
                 let response = format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nConnection: close\r\nContent-Length: {}\r\n\r\n{message}", message.len());
                 stream

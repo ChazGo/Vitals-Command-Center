@@ -4,6 +4,9 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <RootNamespace>Vitals.Windows</RootNamespace>
+    <Product>Health</Product>
+    <Title>Health</Title>
+    <Description>Native Windows health dashboard inspired by Vitals Command Center.</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>ARM64</Platforms>
     <PlatformTarget>ARM64</PlatformTarget>
@@ -21,9 +24,25 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.9169" />
+    <Content Include="..\..\LICENSE" Link="LICENSE.txt"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="Exists('..\core\target\aarch64-pc-windows-msvc\release\vitals_core.dll')">
     <Content Include="..\core\target\aarch64-pc-windows-msvc\release\vitals_core.dll"
              Link="vitals_core.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
+  <Target Name="PublishWinUIResources" BeforeTargets="ComputeFilesToPublish"
+          DependsOnTargets="Build;AddProcessedXamlFilesToCopyLocal">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(TargetDir)$(TargetName).pri">
+        <RelativePath>$(TargetName).pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="@(_ProcessedXamlFilesToCopyLocalWithTargetPath)"
+                             Condition="'%(_ProcessedXamlFilesToCopyLocalWithTargetPath.Extension)' == '.xbf'">
+        <RelativePath>%(_ProcessedXamlFilesToCopyLocalWithTargetPath.TargetPath)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 </Project>

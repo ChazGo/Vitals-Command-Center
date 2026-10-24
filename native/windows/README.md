@@ -1,4 +1,4 @@
-# Vitals for Windows ARM64
+# Health for Windows ARM64
 
 A native WinUI 3 / C# dashboard. No WebView, Electron, hosted frontend, AI, or
 telemetry. Google Health is the only integration. The upstream repository's
@@ -53,9 +53,9 @@ a local-status retry button. It never displays synthetic data.
 1. In Google Cloud, enable the Google Health API for your own project.
 2. Configure the OAuth consent screen and add your account as a test user if
    the application is in testing. Create a **Desktop app** OAuth client.
-3. Open Vitals **Settings**, save the client ID and optional secret, then choose
+3. Open Health **Settings**, save the client ID and optional secret, then choose
    **Connect Google**. Finish authorization in your default browser.
-4. Choose **Sync last 30 days**. Vitals displays the latest date with available
+4. Choose **Sync last 30 days**. Health displays the latest date with available
    data, seven metric cards, sleep stages, and up to 30 dated history rows.
 
 Google Cloud configuration and API/account eligibility are the user's

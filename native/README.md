@@ -1,8 +1,15 @@
-# Vitals Native
+# Health
 
 Windows ARM64 app: **WinUI 3/C# UI + Rust backend**, with no web server,
 WebView, cloud AI, telemetry, or background service. The original web app
 remains unchanged.
+
+Health is an independent native adaptation inspired by
+[Vitals Command Center by 8tp](https://github.com/8tp/Vitals-Command-Center).
+The original web app and its [MIT license](../LICENSE), copyright 2026 8tp,
+are retained in this fork; the license is also included with the installed app.
+The WinUI interface and Rust backend are new native implementations, not the
+original React/Node app wrapped in a desktop window.
 
 ## Build and install
 
@@ -15,8 +22,22 @@ Studio 2022 C++ ARM64 tools, and a Windows 11 SDK. Dependencies are pinned in
 ```
 
 This tests/lints Rust, builds a self-contained ARM64 application, and creates
-**Vitals Native** desktop/Start menu shortcuts. Close the app to stop it;
+**Health** desktop/Start menu shortcuts. Close the app to stop it;
 there is no console window to maintain. See [UI details](windows/README.md).
+The acrylic backdrop follows Windows transparency/accessibility settings.
+
+Check the installed dashboard, Settings, and two clean launch/close cycles:
+
+```powershell
+powershell.exe -NoProfile -File .\native\Test-Launch.ps1
+```
+
+The publish/install checks require the app's PRI and compiled XAML resources,
+not just its executable and Rust DLL. Window-initialization failures display
+an error dialog and write local details to
+`%LOCALAPPDATA%\VitalsNative\startup-error.log`.
+Internal binary names and `VitalsNative` storage paths are retained for
+compatibility; renaming the app does not move or reset saved data.
 
 ## Connect Google Health
 

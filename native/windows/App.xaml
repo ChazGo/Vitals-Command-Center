@@ -7,7 +7,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
-            <Style TargetType="Button">
+            <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
                 <Setter Property="MinHeight" Value="44" />
                 <Setter Property="Padding" Value="18,10" />
             </Style>

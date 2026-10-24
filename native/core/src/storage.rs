@@ -30,17 +30,17 @@ pub fn load() -> Result<Store, String> {
     let encrypted = match fs::read(&path) {
         Ok(bytes) => bytes,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Store::default()),
-        Err(error) => return Err(format!("Cannot read local Vitals data: {error}")),
+        Err(error) => return Err(format!("Cannot read local Health data: {error}")),
     };
     let plain = Zeroizing::new(crypt(&encrypted, false)?);
     serde_json::from_slice(&plain)
-        .map_err(|_| "Local Vitals data is invalid; it has not been overwritten.".into())
+        .map_err(|_| "Local Health data is invalid; it has not been overwritten.".into())
 }
 
 pub fn save(store: &Store) -> Result<(), String> {
     let path = path()?;
     fs::create_dir_all(path.parent().ok_or("Invalid storage path.")?)
-        .map_err(|e| format!("Cannot create local Vitals storage: {e}"))?;
+        .map_err(|e| format!("Cannot create local Health storage: {e}"))?;
     let plain = Zeroizing::new(
         serde_json::to_vec(store).map_err(|e| format!("Cannot encode local data: {e}"))?,
     );

@@ -18,9 +18,24 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(TitleBarDragRegion);
+        Root.ActualThemeChanged += Root_ActualThemeChanged;
         Root.RequestedTheme = ThemePreferences.Load();
+        UpdateTitleBar();
         AppWindow.Resize(new global::Windows.Graphics.SizeInt32(1120, 900));
         RenderStatus();
+    }
+
+    private void Root_ActualThemeChanged(FrameworkElement sender, object args) => UpdateTitleBar();
+
+    private void UpdateTitleBar()
+    {
+        var titleBar = AppWindow.TitleBar;
+        titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        if (TitleBarText.Foreground is Microsoft.UI.Xaml.Media.SolidColorBrush foreground)
+            titleBar.ButtonForegroundColor = foreground.Color;
     }
 
     private async void Root_Loaded(object sender, RoutedEventArgs e)
@@ -58,7 +73,7 @@ public sealed partial class MainWindow : Window
         catch (BadImageFormatException)
         {
             _backendAvailable = false;
-            ShowBackendError("The native health library cannot be loaded. Vitals and vitals_core.dll must both target Windows ARM64.");
+            ShowBackendError("The native health library cannot be loaded. Health and vitals_core.dll must both target Windows ARM64.");
         }
         catch (EntryPointNotFoundException)
         {
@@ -78,7 +93,7 @@ public sealed partial class MainWindow : Window
         {
             // Do not include request payloads, credentials, or raw exception details in UI/logs.
             ShowMessage(InfoBarSeverity.Error, "Couldn't complete the request",
-                "An unexpected local error occurred. Your last successfully loaded view has been kept. Try again or restart Vitals.");
+                "An unexpected local error occurred. Your last successfully loaded view has been kept. Try again or restart Health.");
         }
         finally
         {
@@ -96,6 +111,13 @@ public sealed partial class MainWindow : Window
         MessageBar.Title = title;
         MessageBar.Message = message;
         MessageBar.IsOpen = true;
+        MessageBar.Visibility = Visibility.Visible;
+    }
+
+    private void InfoBar_Closed(InfoBar sender, InfoBarClosedEventArgs args)
+    {
+        if (!sender.IsOpen)
+            sender.Visibility = Visibility.Collapsed;
     }
 
     private void ShowBackendError(string message)
@@ -127,7 +149,7 @@ public sealed partial class MainWindow : Window
         if (_dialogOpen)
             return;
         await RunOperationAsync(new { operation = "connect" },
-            "Complete Google sign-in in your browser. Vitals is waiting for authorization (up to 3 minutes).",
+            "Complete Google sign-in in your browser. Health is waiting for authorization (up to 3 minutes).",
             "Google Health is connected. Choose Sync to fetch your available health data.");
     }
 
@@ -152,6 +174,7 @@ public sealed partial class MainWindow : Window
         WelcomePanel.Visibility = _status.Connected ? Visibility.Collapsed : Visibility.Visible;
         WarningBar.Message = string.Join(Environment.NewLine, _status.Warnings);
         WarningBar.IsOpen = _status.Warnings.Count > 0;
+        WarningBar.Visibility = WarningBar.IsOpen ? Visibility.Visible : Visibility.Collapsed;
 
         var days = _status.Days.OrderByDescending(day => day.Date, StringComparer.Ordinal).ToList();
         HealthDay? latest = days.FirstOrDefault(day => day.HasData);
@@ -159,13 +182,13 @@ public sealed partial class MainWindow : Window
             : $"Latest day with available data · {FormatDate(latest.Date)}";
 
         MetricsGrid.Children.Clear();
-        AddMetric("Steps", Value(latest?.Steps, "N0"), "steps");
-        AddMetric("Resting heart rate", Value(latest?.RestingHeartRate, "0.#"), "bpm");
-        AddMetric("Heart rate variability", Value(latest?.Hrv, "0.#"), "ms");
-        AddMetric("Sleep", Value(latest?.SleepHours, "0.##"), "hours");
-        AddMetric("Blood oxygen", Value(latest?.Spo2, "0.#"), "% SpO₂");
-        AddMetric("Respiratory rate", Value(latest?.RespiratoryRate, "0.#"), "breaths/min");
-        AddMetric("Active calories", Value(latest?.ActiveCalories, "N0"), "kcal");
+        AddMetric("Steps", Value(latest?.Steps, "N0"), "steps", "\uE805");
+        AddMetric("Resting heart rate", Value(latest?.RestingHeartRate, "0.#"), "bpm", "\uE95E");
+        AddMetric("Heart rate variability", Value(latest?.Hrv, "0.#"), "ms", "\uE9D9");
+        AddMetric("Sleep", Value(latest?.SleepHours, "0.##"), "hours", "\uE708");
+        AddMetric("Blood oxygen", Value(latest?.Spo2, "0.#"), "% SpO₂", "\uE81C");
+        AddMetric("Respiratory rate", Value(latest?.RespiratoryRate, "0.#"), "breaths/min", "\uE9D9");
+        AddMetric("Active calories", Value(latest?.ActiveCalories, "N0"), "kcal", "\uECAD");
         LayoutMetrics();
 
         SleepDetailText.Text = $"Deep: {Value(latest?.DeepHours, "0.##")} h   ·   REM: {Value(latest?.RemHours, "0.##")} h   ·   Light: {Value(latest?.LightHours, "0.##")} h";
@@ -186,11 +209,11 @@ public sealed partial class MainWindow : Window
         DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture,
             DateTimeStyles.None, out var date) ? date.ToString("ddd, d MMM yyyy", CultureInfo.CurrentCulture) : value;
 
-    private void AddMetric(string label, string value, string unit)
+    private void AddMetric(string label, string value, string unit, string glyph)
     {
         var card = new ContentControl
         {
-            Content = new MetricRow(label, value, unit),
+            Content = new MetricRow(label, value, unit, glyph),
             ContentTemplate = (DataTemplate)Root.Resources["MetricCardTemplate"],
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
             IsTabStop = false
@@ -251,7 +274,7 @@ public sealed partial class MainWindow : Window
         var content = new StackPanel { Spacing = 14, MaxWidth = 540 };
         content.Children.Add(new TextBlock
         {
-            Text = "Use your own Google Cloud project: enable the Google Health API, configure OAuth consent, add your account as a test user when the app is in testing, and create an OAuth client with application type Desktop app. This cloud setup is required; Vitals cannot create it for you.",
+            Text = "Use your own Google Cloud project: enable the Google Health API, configure OAuth consent, add your account as a test user when the app is in testing, and create an OAuth client with application type Desktop app. This cloud setup is required; Health cannot create it for you.",
             TextWrapping = TextWrapping.Wrap
         });
         content.Children.Add(clientId);
@@ -263,14 +286,14 @@ public sealed partial class MainWindow : Window
         });
         content.Children.Add(new TextBlock
         {
-            Text = "Google Health cloud data is not the same as all Android Health Connect data. Missing metrics stay unavailable. Vitals reads cached data at launch and contacts Google only when you connect or sync.",
+            Text = "Google Health cloud data is not the same as all Android Health Connect data. Missing metrics stay unavailable. Health reads cached data at launch and contacts Google only when you connect or sync.",
             TextWrapping = TextWrapping.Wrap
         });
         content.Children.Add(appearance);
         content.Children.Add(validation);
         var dialog = new ContentDialog
         {
-            XamlRoot = Root.XamlRoot, RequestedTheme = oldTheme, Title = "Vitals settings",
+            XamlRoot = Root.XamlRoot, RequestedTheme = oldTheme, Title = "Health settings",
             Content = new ScrollViewer
             {
                 Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -340,7 +363,7 @@ public sealed partial class MainWindow : Window
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             ShowMessage(InfoBarSeverity.Warning, "Appearance not saved",
-                "The theme applies for this session, but Vitals could not save it in your local app data folder.");
+                "The theme applies for this session, but Health could not save it in your local app data folder.");
         }
     }
 
@@ -375,7 +398,7 @@ public sealed partial class MainWindow : Window
         {
             XamlRoot = Root.XamlRoot, RequestedTheme = Root.RequestedTheme,
             Title = "Disconnect and clear local health data?",
-            Content = "This removes locally cached health data and saved Google tokens from Vitals. It does not revoke authorization at Google. To revoke access, remove Vitals or your OAuth application from your Google Account's third-party connections.",
+            Content = "This removes locally cached health data and saved Google tokens from Health. It does not revoke authorization at Google. To revoke access, remove your OAuth application from your Google Account's third-party connections.",
             PrimaryButtonText = "Disconnect & clear", CloseButtonText = "Keep connection",
             DefaultButton = ContentDialogButton.Close
         };
@@ -395,5 +418,5 @@ public sealed partial class MainWindow : Window
     }
 
     public sealed record HistoryRow(string Date, string Activity, string Recovery, string Other);
-    public sealed record MetricRow(string Label, string Value, string Unit);
+    public sealed record MetricRow(string Label, string Value, string Unit, string Glyph);
 }

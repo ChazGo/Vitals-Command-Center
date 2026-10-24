@@ -33,8 +33,10 @@ try {
 $output = Join-Path $root 'artifacts\win-arm64'
 & $dotnet publish (Join-Path $root 'windows\Vitals.Windows.csproj') -c Release -p:Platform=ARM64 -r win-arm64 --self-contained true -o $output --nologo -v:minimal
 if ($LASTEXITCODE -ne 0) { throw 'WinUI publish failed.' }
-if (-not (Test-Path -LiteralPath (Join-Path $output 'vitals_core.dll'))) {
-    throw 'The publish output is missing the Rust backend.'
+foreach ($file in @('vitals_core.dll', 'Vitals.Windows.pri', 'App.xbf', 'MainWindow.xbf', 'LICENSE.txt')) {
+    if (-not (Test-Path -LiteralPath (Join-Path $output $file))) {
+        throw "The publish output is missing a required runtime file: $file"
+    }
 }
 Write-Host "ARM64 application published to $output"
 

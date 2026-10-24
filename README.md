@@ -35,13 +35,15 @@ accounts, no OAuth. See **[docs/QUICKSTART.md](docs/QUICKSTART.md)**.
 
 ---
 
-## Native Windows ARM64 preview
+## Health: native Windows ARM64 preview
 
 The [native app](native/README.md) uses **WinUI 3 and Rust**, without a web
 server. Its initial scope is read-only Google Health sync, a touch-friendly
 dashboard, and Windows-encrypted local storage; other wearable adapters and AI
 are not included. Build and install with `.\native\Build.ps1 -Install`.
 Google OAuth configuration and real-account validation are still required.
+Health is an independent adaptation inspired by Vitals Command Center by 8tp;
+the original web app and MIT license are retained in this fork.
 
 ## Why Vitals
 
