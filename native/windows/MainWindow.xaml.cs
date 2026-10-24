@@ -22,6 +22,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "Health.ico"));
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBarDragRegion);
         Root.ActualThemeChanged += Root_ActualThemeChanged;

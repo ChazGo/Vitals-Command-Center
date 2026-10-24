@@ -66,8 +66,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <FontIcon Glyph="&#xE95E;" FontSize="16"
-                          Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                <Image Source="Assets/Health.png" Width="22" Height="22" />
                 <TextBlock x:Name="TitleBarText" Grid.Column="1" Text="Health" FontWeight="SemiBold" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="2" Text="Your personal health space" FontSize="12" Margin="8,0,0,0"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"

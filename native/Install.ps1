@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 $source = Join-Path $PSScriptRoot 'artifacts\win-arm64'
 $exe = Join-Path $source 'Vitals.Windows.exe'
 if (-not (Test-Path -LiteralPath $exe)) { throw 'Run native\Build.ps1 first.' }
-foreach ($file in @('vitals_core.dll', 'Vitals.Windows.pri', 'App.xbf', 'MainWindow.xbf', 'LICENSE.txt')) {
+foreach ($file in @('vitals_core.dll', 'Vitals.Windows.pri', 'App.xbf', 'MainWindow.xbf', 'LICENSE.txt', 'Assets\Health.ico', 'Assets\Health.png')) {
     if (-not (Test-Path -LiteralPath (Join-Path $source $file))) {
         throw "A required runtime file is missing: $file. Rebuild before installing."
     }
@@ -28,6 +28,7 @@ foreach ($folder in $folders) {
     $link = $shell.CreateShortcut($shortcut)
     $link.TargetPath = $installedExe
     $link.WorkingDirectory = $destination
+    $link.IconLocation = (Join-Path $destination 'Assets\Health.ico') + ',0'
     $link.Description = 'Health: native Google Health dashboard, inspired by Vitals Command Center.'
     $link.Save()
     $legacyShortcut = Join-Path $folder 'Vitals Native.lnk'

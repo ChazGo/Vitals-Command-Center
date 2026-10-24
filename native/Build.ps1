@@ -33,7 +33,7 @@ try {
 $output = Join-Path $root 'artifacts\win-arm64'
 & $dotnet publish (Join-Path $root 'windows\Vitals.Windows.csproj') -c Release -p:Platform=ARM64 -r win-arm64 --self-contained true -o $output --nologo -v:minimal
 if ($LASTEXITCODE -ne 0) { throw 'WinUI publish failed.' }
-foreach ($file in @('vitals_core.dll', 'Vitals.Windows.pri', 'App.xbf', 'MainWindow.xbf', 'LICENSE.txt')) {
+foreach ($file in @('vitals_core.dll', 'Vitals.Windows.pri', 'App.xbf', 'MainWindow.xbf', 'LICENSE.txt', 'Assets\Health.ico', 'Assets\Health.png')) {
     if (-not (Test-Path -LiteralPath (Join-Path $output $file))) {
         throw "The publish output is missing a required runtime file: $file"
     }

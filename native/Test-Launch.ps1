@@ -7,7 +7,8 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
-Add-Type @'
+Add-Type -AssemblyName System.Drawing
+Add-Type -ReferencedAssemblies System.dll, System.Drawing.dll @'
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
@@ -27,6 +28,63 @@ public static class VitalsWindowProbe
     public static extern bool GetCursorPos(out Point point);
     [DllImport("user32.dll")]
     public static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessageW(IntPtr window, uint message, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", EntryPoint = "GetClassLongPtrW")]
+    private static extern IntPtr GetClassLongPtr(IntPtr window, int index);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint ExtractIconExW(string file, int index, out IntPtr large, out IntPtr small, uint count);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern IntPtr LoadImageW(IntPtr instance, string name, uint type, int width, int height, uint flags);
+    [DllImport("user32.dll")]
+    private static extern bool DestroyIcon(IntPtr icon);
+
+    public static void CheckIcons(string executable, IntPtr window)
+    {
+        IntPtr large = IntPtr.Zero, small = IntPtr.Zero;
+        IntPtr expectedLarge = IntPtr.Zero, expectedSmall = IntPtr.Zero;
+        try
+        {
+            if (ExtractIconExW(executable, 0, out large, out small, 1) < 1 || large == IntPtr.Zero || small == IntPtr.Zero)
+                throw new InvalidOperationException("The executable does not contain Windows app icons.");
+            string iconFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(executable), "Assets", "Health.ico");
+            expectedLarge = LoadExpectedIcon(large, iconFile);
+            expectedSmall = LoadExpectedIcon(small, iconFile);
+            if (expectedLarge == IntPtr.Zero || expectedSmall == IntPtr.Zero)
+                throw new InvalidOperationException("The installed Health icon cannot be read.");
+            MatchIcon(large, expectedLarge);
+            MatchIcon(small, expectedSmall);
+            if (SendMessageW(window, 0x7F, new IntPtr(1), IntPtr.Zero) == IntPtr.Zero &&
+                GetClassLongPtr(window, -14) == IntPtr.Zero)
+                throw new InvalidOperationException("The running window has no application icon.");
+        }
+        finally
+        {
+            if (large != IntPtr.Zero) DestroyIcon(large);
+            if (small != IntPtr.Zero) DestroyIcon(small);
+            if (expectedLarge != IntPtr.Zero) DestroyIcon(expectedLarge);
+            if (expectedSmall != IntPtr.Zero) DestroyIcon(expectedSmall);
+        }
+    }
+    private static IntPtr LoadExpectedIcon(IntPtr actual, string file)
+    {
+        using (var icon = System.Drawing.Icon.FromHandle(actual))
+            return LoadImageW(IntPtr.Zero, file, 1, icon.Width, icon.Height, 0x10);
+    }
+    private static void MatchIcon(IntPtr actual, IntPtr expected)
+    {
+        using (var actualIcon = System.Drawing.Icon.FromHandle(actual))
+        using (var expectedIcon = System.Drawing.Icon.FromHandle(expected))
+        using (var a = actualIcon.ToBitmap())
+        using (var b = expectedIcon.ToBitmap())
+        {
+            if (a.Size != b.Size) throw new InvalidOperationException("Embedded Health icon size differs.");
+            for (int y = 0; y < a.Height; y++)
+                for (int x = 0; x < a.Width; x++)
+                    if (a.GetPixel(x, y) != b.GetPixel(x, y))
+                        throw new InvalidOperationException("Executable icon differs from the original Health artwork.");
+        }
+    }
     [StructLayout(LayoutKind.Sequential)]
     private struct MouseInput
     {
@@ -145,6 +203,7 @@ for ($launch = 1; $launch -le 2; $launch++) {
             -not $process.Responding) {
             throw "Expected a visible responsive dashboard; got '$($process.MainWindowTitle)'."
         }
+        [VitalsWindowProbe]::CheckIcons($Executable, $process.MainWindowHandle)
         $window = [System.Windows.Automation.AutomationElement]::FromHandle($process.MainWindowHandle)
         if ($launch -eq 2) {
             if (-not [VitalsWindowProbe]::SetWindowPos($process.MainWindowHandle, [IntPtr]::Zero, 0, 0, 600, 900, 6)) {

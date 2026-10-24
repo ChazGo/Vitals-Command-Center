@@ -8,6 +8,7 @@
     <Title>Health</Title>
     <Description>Native Windows health dashboard inspired by Vitals Command Center.</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Health.ico</ApplicationIcon>
     <Platforms>ARM64</Platforms>
     <PlatformTarget>ARM64</PlatformTarget>
     <RuntimeIdentifier>win-arm64</RuntimeIdentifier>
@@ -26,6 +27,8 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.9169" />
     <Content Include="..\..\LICENSE" Link="LICENSE.txt"
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Health.ico" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Health.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="Exists('..\core\target\aarch64-pc-windows-msvc\release\vitals_core.dll')">
     <Content Include="..\core\target\aarch64-pc-windows-msvc\release\vitals_core.dll"

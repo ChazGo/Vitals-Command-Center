@@ -25,6 +25,9 @@ This tests/lints Rust, builds a self-contained ARM64 application, and creates
 **Health** desktop/Start menu shortcuts. Close the app to stop it;
 there is no console window to maintain. See [UI details](windows/README.md).
 The acrylic backdrop follows Windows transparency/accessibility settings.
+Original Health artwork is embedded in the executable and used for window,
+taskbar, and shortcut icons. To regenerate the 16-256px ICO and title-bar PNG,
+run `powershell.exe -NoProfile -File .\native\windows\Assets\Generate-Icon.ps1`.
 
 Check the installed dashboard, Settings, and two clean launch/close cycles:
 
@@ -66,6 +69,28 @@ compatibility; renaming the app does not move or reset saved data.
 The app uses PKCE, random OAuth state, and a temporary loopback listener.
 There is no sign-in embedded in the app. Testing-mode refresh tokens may
 expire and require reconnection.
+
+### Shared sign-in direction
+
+The intended public flow is **Connect Google Health → read-only data disclosure
+→ Google consent → linked-profile check → initial sync**, using one app-owned
+Desktop OAuth client. Users authorize their own accounts; tokens/data remain
+on their own PCs. Custom client setup would move to Advanced settings.
+No shared registration is configured yet.
+
+Before releasing that flow, register the app, publish its homepage/privacy
+policy, handle partial consent, and check the Google Health identity endpoint
+before declaring a connection successful. Testing is limited to 100 users.
+Google Health documents verification and annual CASA assessment requirements;
+general OAuth guidance ties assessments to server-side access. Confirm how
+Google applies these rules to this local-only app rather than assuming an
+exemption. See [Health verification](https://developers.google.com/health/app-verification),
+[desktop OAuth](https://developers.google.com/identity/protocols/oauth2/native-app),
+and [Health setup](https://developers.google.com/health/setup).
+
+This is Google Health cloud access, not direct access to Android's on-device
+Health Connect database. A full Health Connect bridge would need an Android
+companion; a shared OAuth client alone cannot provide that.
 
 ## Scope and privacy
 
