@@ -1,0 +1,6 @@
+core/target/
+windows/bin/
+windows/obj/
+.vs/
+*.user
+artifacts/

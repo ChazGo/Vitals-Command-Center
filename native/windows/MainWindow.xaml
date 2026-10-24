@@ -1,0 +1,106 @@
+<Window
+    x:Class="Vitals.Windows.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Vitals">
+    <Grid x:Name="Root" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Root_Loaded">
+        <Grid.Resources>
+            <DataTemplate x:Key="MetricCardTemplate">
+                <Border Padding="20" CornerRadius="20" MinHeight="156"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Value}" FontSize="32" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Unit}" TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </Grid.Resources>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Padding="28" Spacing="22" MaxWidth="1320" HorizontalAlignment="Stretch">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Vitals" Style="{ThemeResource TitleLargeTextBlockStyle}" />
+                        <TextBlock Text="Your health, at a glance" Style="{StaticResource BodyText}" />
+                    </StackPanel>
+                    <Button x:Name="SettingsButton" Grid.Column="1" Content="Settings" Click="Settings_Click"
+                            VerticalAlignment="Center" AutomationProperties.Name="Open Vitals settings" />
+                </Grid>
+                <StackPanel Spacing="12">
+                    <TextBlock x:Name="ConnectionText" Text="Checking Google Health connection…"
+                               TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="ConnectButton" Content="Connect Google" Click="Connect_Click" IsEnabled="False" />
+                        <Button x:Name="SyncButton" Content="Sync last 30 days" Click="Sync_Click" IsEnabled="False" />
+                    </StackPanel>
+                    <TextBlock x:Name="LastSyncText" Style="{StaticResource BodyText}" />
+                    <ProgressBar x:Name="BusyProgress" IsIndeterminate="True" Visibility="Collapsed"
+                                 AutomationProperties.Name="Health operation in progress" />
+                    <TextBlock x:Name="BusyText" TextWrapping="Wrap" Visibility="Collapsed"
+                               AutomationProperties.LiveSetting="Polite" />
+                </StackPanel>
+                <InfoBar x:Name="MessageBar" IsOpen="False" IsClosable="True" Severity="Error" />
+                <InfoBar x:Name="WarningBar" IsOpen="False" IsClosable="True" Severity="Warning" Title="Data notes" />
+                <Border x:Name="WelcomePanel" Padding="22" CornerRadius="20"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="A calm place for your health data" Style="{ThemeResource SubtitleTextBlockStyle}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Style="{StaticResource BodyText}"
+                                   Text="Bring in the data available from Google Health. Start by adding your own Google Desktop OAuth client in Settings, then connect your Google account and choose Sync. Vitals never fills gaps with sample data." />
+                        <TextBlock Style="{StaticResource BodyText}"
+                                   Text="Google Health cloud access does not include all data stored by Android Health Connect. Availability depends on your account, devices, permissions, and Google's API." />
+                        <Button x:Name="SetupButton" Content="Set up Google Health" Click="Settings_Click"
+                                HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Daily snapshot" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock x:Name="SnapshotDate" Style="{StaticResource BodyText}" Text="No health data synced yet." />
+                </StackPanel>
+                <Grid x:Name="MetricsGrid" ColumnSpacing="14" RowSpacing="14" SizeChanged="Metrics_SizeChanged" />
+                <Border Padding="22" CornerRadius="20"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Sleep detail" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Name="SleepDetailText" TextWrapping="Wrap" />
+                        <TextBlock Text="Stages are shown only when supplied by Google; they may not sum to total sleep."
+                                   Style="{StaticResource BodyText}" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Recent days" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock Text="Newest first · up to 30 days · — means unavailable" Style="{StaticResource BodyText}" />
+                    <TextBlock x:Name="HistoryEmptyText" Text="Sync your Google Health account to see daily history."
+                               Style="{StaticResource BodyText}" />
+                    <ItemsControl x:Name="HistoryList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="16" Margin="0,0,0,10" CornerRadius="14"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="{Binding Date}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Activity}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Recovery}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Other}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <TextBlock Style="{StaticResource BodyText}"
+                           Text="For personal awareness, not diagnosis or medical advice. Sync happens only when you choose it. No AI, telemetry, or background sync." />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
