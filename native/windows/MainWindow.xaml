@@ -90,8 +90,9 @@
                         <TextBlock Text="A little clarity. A healthier rhythm." Style="{StaticResource BodyText}" />
                     </StackPanel>
                     <Button x:Name="SettingsButton" Grid.Column="1" Click="Settings_Click"
+                            Width="40" Height="40" Padding="0"
                             VerticalAlignment="Top" AutomationProperties.Name="Open Health settings">
-                        <FontIcon Glyph="&#xE713;" FontSize="20" />
+                        <FontIcon x:Name="SettingsGlyph" Glyph="&#xE713;" FontSize="18" />
                         <ToolTipService.ToolTip>Settings</ToolTipService.ToolTip>
                     </Button>
                 </Grid>
@@ -104,7 +105,7 @@
                         <StackPanel x:Name="ConnectionActions" Orientation="Horizontal" Spacing="12">
                             <Button x:Name="ConnectButton" Content="Connect Google" Click="Connect_Click" IsEnabled="False" />
                             <Button x:Name="SyncButton" Content="Sync last 30 days" Click="Sync_Click" IsEnabled="False"
-                                    Style="{StaticResource AccentButtonStyle}" MinHeight="44" Padding="18,10" />
+                                    Style="{StaticResource AccentButtonStyle}" MinHeight="40" Padding="12,6" />
                         </StackPanel>
                         <TextBlock x:Name="LastSyncText" Style="{StaticResource BodyText}" />
                         <ProgressBar x:Name="BusyProgress" IsIndeterminate="True" Visibility="Collapsed"
@@ -134,7 +135,7 @@
                                    Text="Google Health cloud access does not include all data stored by Android Health Connect. Availability depends on your account, devices, permissions, and Google's API." />
                         <Button x:Name="SetupButton" Content="Set up Google Health" Click="Settings_Click"
                                 HorizontalAlignment="Left" Style="{StaticResource AccentButtonStyle}"
-                                MinHeight="44" Padding="18,10" />
+                                MinHeight="40" Padding="12,6" />
                     </StackPanel>
                 </Border>
                 <StackPanel Spacing="6">
@@ -180,13 +181,6 @@
                 </StackPanel>
                 <TextBlock Style="{StaticResource BodyText}"
                            Text="For personal awareness, not diagnosis or medical advice. Sync happens only when you choose it. No AI, telemetry, or background sync." />
-                <StackPanel Spacing="4">
-                    <TextBlock Text="Health · Independent native Windows adaptation" Style="{StaticResource BodyText}" />
-                    <HyperlinkButton NavigateUri="https://github.com/8tp/Vitals-Command-Center"
-                                     HorizontalAlignment="Left" Padding="0,8" MinHeight="44">
-                        <TextBlock Text="Inspired by Vitals Command Center by 8tp · MIT license" TextWrapping="Wrap" />
-                    </HyperlinkButton>
-                </StackPanel>
             </StackPanel>
         </ScrollViewer>
     </Grid>

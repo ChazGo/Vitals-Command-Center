@@ -3,6 +3,8 @@ using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media;
 
 namespace Vitals.Windows;
 
@@ -14,6 +16,8 @@ public sealed partial class MainWindow : Window
     private bool _loaded;
     private bool _backendAvailable;
     private int _metricColumns;
+    private readonly InputModeMonitor _inputMode;
+    private ContentDialog? _activeDialog;
 
     public MainWindow()
     {
@@ -24,7 +28,103 @@ public sealed partial class MainWindow : Window
         Root.RequestedTheme = ThemePreferences.Load();
         UpdateTitleBar();
         AppWindow.Resize(new global::Windows.Graphics.SizeInt32(1120, 900));
+        _inputMode = new InputModeMonitor(this);
+        _inputMode.Observe(Root);
+        _inputMode.Changed += UpdateControlSizing;
+        Closed += (_, _) => _inputMode.Dispose();
+        UpdateControlSizing();
         RenderStatus();
+    }
+
+    private double TargetSize => _inputMode.TouchTargets ? 48 : 40;
+    private Thickness ActionPadding => _inputMode.TouchTargets
+        ? new Thickness(18, 10, 18, 10) : new Thickness(12, 6, 12, 6);
+
+    private void SizeAction(ButtonBase button)
+    {
+        button.MinHeight = TargetSize;
+        button.MinWidth = TargetSize;
+        button.Padding = ActionPadding;
+    }
+
+    private void UpdateControlSizing()
+    {
+        foreach (var button in new[] { ConnectButton, SyncButton, SetupButton })
+            SizeAction(button);
+        SettingsButton.MinWidth = SettingsButton.MinHeight = TargetSize;
+        SettingsButton.Width = SettingsButton.Height = TargetSize;
+        SettingsGlyph.FontSize = _inputMode.TouchTargets ? 20 : 18;
+        ConnectionActions.Spacing = _inputMode.TouchTargets ? 12 : 10;
+        if (MessageBar.ActionButton is Button retry)
+            SizeAction(retry);
+        if (_activeDialog is not null)
+            ApplyDialogSizing(_activeDialog);
+    }
+
+    private Style DialogButtonStyle(bool accent)
+    {
+        var style = new Style(typeof(Button))
+        {
+            BasedOn = (Style)Application.Current.Resources[accent ? "AccentButtonStyle" : "DefaultButtonStyle"]
+        };
+        style.Setters.Add(new Setter(Control.MinHeightProperty, TargetSize));
+        style.Setters.Add(new Setter(Control.MinWidthProperty, TargetSize));
+        style.Setters.Add(new Setter(Control.PaddingProperty, ActionPadding));
+        return style;
+    }
+
+    private void ApplyDialogSizing(ContentDialog dialog)
+    {
+        dialog.PrimaryButtonStyle = DialogButtonStyle(true);
+        dialog.SecondaryButtonStyle = DialogButtonStyle(false);
+        dialog.CloseButtonStyle = DialogButtonStyle(false);
+        ResizeDialogContent(dialog.Content as DependencyObject);
+    }
+
+    private void ResizeDialogContent(DependencyObject? element)
+    {
+        if (element is TextBox or PasswordBox or ComboBox)
+        {
+            ((Control)element).MinHeight = TargetSize;
+            ((Control)element).Padding = _inputMode.TouchTargets
+                ? new Thickness(12, 13, 12, 13) : new Thickness(12, 6, 12, 6);
+            if (element is ComboBox combo)
+            {
+                var style = new Style(typeof(ComboBoxItem))
+                {
+                    BasedOn = (Style)Application.Current.Resources["DefaultComboBoxItemStyle"]
+                };
+                style.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, TargetSize));
+                combo.ItemContainerStyle = style;
+            }
+            return;
+        }
+        if (element is HyperlinkButton link)
+        {
+            SizeAction(link);
+            return;
+        }
+        if (element is null)
+            return;
+        for (int index = 0; index < VisualTreeHelper.GetChildrenCount(element); index++)
+            ResizeDialogContent(VisualTreeHelper.GetChild(element, index));
+    }
+
+    private async Task<ContentDialogResult> ShowDialogAsync(ContentDialog dialog)
+    {
+        _activeDialog = dialog;
+        _inputMode.Observe(dialog);
+        dialog.Loaded += (_, _) => ApplyDialogSizing(dialog);
+        ApplyDialogSizing(dialog);
+        try
+        {
+            return await dialog.ShowAsync();
+        }
+        finally
+        {
+            _inputMode.StopObserving(dialog);
+            _activeDialog = null;
+        }
     }
 
     private void Root_ActualThemeChanged(FrameworkElement sender, object args) => UpdateTitleBar();
@@ -124,7 +224,8 @@ public sealed partial class MainWindow : Window
     {
         ShowMessage(InfoBarSeverity.Error, "Native health service unavailable", message);
         ConnectionText.Text = "Google Health status unavailable";
-        var retry = new Button { Content = "Retry local status", MinHeight = 44 };
+        var retry = new Button { Content = "Retry local status" };
+        SizeAction(retry);
         retry.Click += async (_, _) =>
         {
             if (!_dialogOpen)
@@ -257,15 +358,15 @@ public sealed partial class MainWindow : Window
         var clientId = new TextBox
         {
             Header = "Desktop OAuth client ID", Text = _status.ClientId,
-            PlaceholderText = "…apps.googleusercontent.com", MinHeight = 44,
+            PlaceholderText = "…apps.googleusercontent.com",
             TextWrapping = TextWrapping.Wrap
         };
         var clientSecret = new PasswordBox
         {
-            Header = "Client secret (optional)", MinHeight = 44,
+            Header = "Client secret (optional)",
             PasswordRevealMode = PasswordRevealMode.Hidden
         };
-        var appearance = new ComboBox { Header = "Appearance", MinHeight = 44, HorizontalAlignment = HorizontalAlignment.Stretch };
+        var appearance = new ComboBox { Header = "Appearance", HorizontalAlignment = HorizontalAlignment.Stretch };
         appearance.Items.Add("Use system theme");
         appearance.Items.Add("Light");
         appearance.Items.Add("Dark");
@@ -291,6 +392,24 @@ public sealed partial class MainWindow : Window
         });
         content.Children.Add(appearance);
         content.Children.Add(validation);
+        content.Children.Add(new TextBlock { Text = "About Health", Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"] });
+        content.Children.Add(new TextBlock
+        {
+            Text = "An independent native Windows adaptation inspired by Vitals Command Center by 8tp. Built with WinUI 3 and Rust. Original copyright 2026 8tp and MIT license retained; the full license is included with the app.",
+            TextWrapping = TextWrapping.Wrap
+        });
+        content.Children.Add(new HyperlinkButton
+        {
+            Content = new TextBlock { Text = "Health source on GitHub", TextWrapping = TextWrapping.Wrap },
+            NavigateUri = new Uri("https://github.com/ChazGo/Vitals-Command-Center/tree/native/windows-rust-winui3"),
+            HorizontalAlignment = HorizontalAlignment.Left
+        });
+        content.Children.Add(new HyperlinkButton
+        {
+            Content = new TextBlock { Text = "Original Vitals Command Center by 8tp", TextWrapping = TextWrapping.Wrap },
+            NavigateUri = new Uri("https://github.com/8tp/Vitals-Command-Center"),
+            HorizontalAlignment = HorizontalAlignment.Left
+        });
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot, RequestedTheme = oldTheme, Title = "Health settings",
@@ -326,7 +445,7 @@ public sealed partial class MainWindow : Window
         ContentDialogResult result;
         try
         {
-            result = await dialog.ShowAsync();
+            result = await ShowDialogAsync(dialog);
         }
         finally
         {
@@ -381,7 +500,7 @@ public sealed partial class MainWindow : Window
         };
         try
         {
-            return await confirmation.ShowAsync() == ContentDialogResult.Primary;
+            return await ShowDialogAsync(confirmation) == ContentDialogResult.Primary;
         }
         finally
         {
@@ -405,7 +524,7 @@ public sealed partial class MainWindow : Window
         ContentDialogResult result;
         try
         {
-            result = await confirmation.ShowAsync();
+            result = await ShowDialogAsync(confirmation);
         }
         finally
         {

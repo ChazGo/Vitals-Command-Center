@@ -32,6 +32,18 @@ Check the installed dashboard, Settings, and two clean launch/close cycles:
 powershell.exe -NoProfile -File .\native\Test-Launch.ps1
 ```
 
+Add `-InputChecks` to exercise real Windows mouse/touch/pen injection against
+the test window. This temporarily brings it above other windows and moves the
+pointer, restoring the cursor afterward.
+
+Controls adapt live: compact 40-DIP main actions for mouse use and larger
+48-DIP targets for touch/pen or Windows tablet posture. Settings uses a square
+icon target instead of a wide button. Sizing changes follow completed taps,
+pen hover, mouse movement, and Windows keyboard/posture notifications; there
+is no device-wide input interception. Native scrolling and pen input remain
+enabled. Attribution and links to this fork and the original project are in
+**Settings > About Health**.
+
 The publish/install checks require the app's PRI and compiled XAML resources,
 not just its executable and Rust DLL. Window-initialization failures display
 an error dialog and write local details to
